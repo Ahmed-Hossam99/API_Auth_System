@@ -4,14 +4,18 @@ const keys = require('../config/keys')
 const { validationResult } = require('express-validator');
 const userModel = require('../models/user')
 
-
+signToken = user => {
+  return jwt.sign({
+    user_id: user.id,
+    expiresIn: "1d",
+  }, keys.jwtSecret);
+}
 exports.signUp = async (req, res, next) => {
   try {
     // check validation result 
     const errors = await validationResult(req)
     if (!errors.isEmpty()) {
       return res.status(422).json({ errors: errors.array() });
-
     }
     // check if user is exist
     const user = await userModel.findOne({ email: req.body.email })
@@ -21,69 +25,42 @@ exports.signUp = async (req, res, next) => {
       })
     }
     else {
-      // encrypt password
-      let salt = bcrypt.genSaltSync(10);
-      let hash = bcrypt.hashSync(req.body.password, salt);
-      // create User 
       newUser = new userModel({
         name: req.body.name,
         email: req.body.email,
-        password: hash
+        password: req.body.password
       })
       const userData = await newUser.save();
+      const token = signToken(userData);
       res.status(201).json({
-        name: userData.name,
-        email: userData.email,
-        password: userData.password,
-        request: {
-          type: 'DELETE',
-          url: 'http://localhost:3000/users/' + userData._id
-        }
+        userData,
+        token,
+
       })
     }
-
   } catch (error) {
     res.json({ error })
   }
-
 }
+
 //  signIn function
-
 exports.signIn = async (req, res, next) => {
-  const user = await userModel.findOne({ email: req.body.email })
-  if (!user) {
-    return res.status(401).json({
-      message: 'eamil not found'
-    })
-  }
-  else {
-    const matchPassword = await bcrypt.compare(req.body.password, user.password)
-    if (!matchPassword) {
-      return res.status(401).json({//401 to un Auth status
-        message: 'password not match  !!'
-      })
-    }
-    else {
-      let token = jwt.sign({ user }, keys.jwtSecret, { expiresIn: "1h" })
-      return res.status(201).json({
-        message: ' Auth successFull !!',
-        token: token
-      })
-    }
-  }
+  // validation done from passport file 
+  const token = signToken(req.user)
+  res.status(200).json({ token })
 }
-
-
 
 
 
 // secret function
 exports.secret = async (req, res, next) => {
-
   res.json({
     msg: "Welcome from Auth",
-    userId: req.user._id,
     user: req.user
   })
 }
+
+
+
+
 

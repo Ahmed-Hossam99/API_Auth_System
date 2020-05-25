@@ -2,6 +2,9 @@ const express = require('express');
 const router = require('express-promise-router')();
 const { body, check } = require('express-validator')
 const { isAuth } = require('../helpers/auth')
+const passport = require('passport')
+require('../helpers/passport')
+
 
 
 // const router = express.Router();
@@ -26,9 +29,18 @@ router.route('/signup').post([
 
 
 // Post Route to signin function 
-router.route('/signin').post(userController.signIn)
+router.route('/signin').post([
+  check('email')
+    .isEmail()
+    .withMessage('please enter valid e-mail')
+    .normalizeEmail(),
 
-router.route('/secret').get(isAuth, userController.secret)
+  body('password', 'Password has to be valid.')
+    .isLength({ min: 5 })
+    .trim()], passport.authenticate('local', { session: false }), userController.signIn)
+
+router.get('/secret', passport.authenticate('jwt', { session: false }), userController.secret)
+
 
 
 // git checkout -b name of paranch
