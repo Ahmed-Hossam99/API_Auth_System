@@ -5,6 +5,11 @@ const { isAuth } = require('../helpers/auth')
 const passport = require('passport')
 require('../helpers/passport')
 
+const passportSignIn = passport.authenticate('local', { session: false });
+const passportJWT = passport.authenticate('jwt', { session: false });
+const passportGoogl = passport.authenticate('googleToken', { session: false })
+const passportFacebook = passport.authenticate('facebookToken', { session: false })
+
 
 
 // const router = express.Router();
@@ -37,15 +42,20 @@ router.route('/signin').post([
 
   body('password', 'Password has to be valid.')
     .isLength({ min: 5 })
-    .trim()], passport.authenticate('local', { session: false }), userController.signIn)
+    .trim()], passportSignIn, userController.signIn)
 
-router.route('/secret').get(passport.authenticate('jwt', { session: false }), userController.secret)
+router.route('/secret').get(passportJWT, userController.secret)
 
-router.route('/oauth/google').post(passport.authenticate('googleToken', { session: false }), userController.googleoAuth);
+router.route('/oauth/google').post(passportGoogl, userController.OAuthToken);
+
+router.route('/oauth/facebook').post(passportFacebook, userController.OAuthToken);
 
 
 
 // git checkout -b name of paranch
+
+// this link to get access token from google OAuth  
+// https://developers.google.com/oauthplayground/
 
 module.exports = router
 

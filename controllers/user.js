@@ -54,7 +54,8 @@ exports.signIn = async (req, res, next) => {
   res.status(200).json({ token })
 }
 
-exports.googleoAuth = async (req, res, next) => {
+
+exports.OAuthToken = async (req, res, next) => {
   // validation done from passport file 
   console.log(req.user)
   const user = req.user

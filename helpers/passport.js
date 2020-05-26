@@ -3,6 +3,7 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const { ExtractJwt } = require('passport-jwt')
 const localStrategy = require('passport-local').Strategy
 const GooglePlusTokenStrategy = require('passport-google-plus-token');
+const FacebookTokenStrategy = require('passport-facebook-token');
 const keys = require('../config/keys')
 const userModel = require('../models/user')
 const bcrypt = require('bcrypt')
@@ -13,24 +14,56 @@ passport.use(new JwtStrategy({
   jwtFromRequest: ExtractJwt.fromHeader('authorization'),
   // 2) the secret
   secretOrKey: keys.jwtSecret
-  // secretOrKey: keys.jwtSecret
 },
   async (payload, done) => {
     try {
       // 1)find user of specific token  (user_id come from jwt.sign from function signup )
       const user = await userModel.findById(payload.user_id)
-      // 2)find user dosen't  exist
       if (!user) {
         return done(null, false)
       }
-      // 3)   return user 
       done(null, user)
     } catch (errot) {
       return done(null, false)
     }
-
-
   }))
+
+
+
+// pasport facebook OAuth strategy
+passport.use('facebookToken', new FacebookTokenStrategy(
+  {
+    clientID: keys.facebookClientID,
+    clientSecret: keys.facebookClientSecret
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      console.log('profile', profile);
+      console.log('accessToken', accessToken);
+      console.log('refreshToken', refreshToken);
+
+      const existingUser = await userModel.findOne({ "facebook.id": profile.id });
+      if (existingUser) {
+        return done(null, existingUser);
+      }
+
+      const newUser = new userModel({
+        method: 'facebook',
+        facebook: {
+          id: profile.id,
+          email: profile.emails[0].value
+        }
+      });
+
+      await newUser.save();
+      done(null, newUser);
+    } catch (error) {
+      done(error, false, error.message);
+    }
+
+  }
+))
+
 
 // passport google OAuth strategy 
 passport.use('googleToken', new GooglePlusTokenStrategy(
@@ -49,11 +82,8 @@ passport.use('googleToken', new GooglePlusTokenStrategy(
       // check if the user is exist on DB
       const existingUser = await userModel.findOne({ "google.id": profile.id });
       if (existingUser) {
-        console.log('user exist in the data base!!')
         return done(null, existingUser);
       }
-      console.log('user not  exist in the data base!!')
-
       // if not create new user 
       const newUser = new userModel({
         method: 'google',
