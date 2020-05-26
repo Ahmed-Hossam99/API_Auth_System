@@ -2,6 +2,7 @@ const passport = require('passport')
 const JwtStrategy = require('passport-jwt').Strategy;
 const { ExtractJwt } = require('passport-jwt')
 const localStrategy = require('passport-local').Strategy
+const GooglePlusTokenStrategy = require('passport-google-plus-token');
 const keys = require('../config/keys')
 const userModel = require('../models/user')
 const bcrypt = require('bcrypt')
@@ -30,7 +31,49 @@ passport.use(new JwtStrategy({
 
 
   }))
-// Local Strategy ti signin functionality 
+
+// passport google OAuth strategy 
+passport.use('googleToken', new GooglePlusTokenStrategy(
+  {
+    // you must write clientID not clientId and the same about clientSecret 
+    clientID: keys.googleClientID,
+    clientSecret: keys.googleClientSecret
+
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      console.log('accessToken =  ', accessToken)
+      console.log('refreshToken =  ', refreshToken)
+      console.log('profile =  ', profile)
+
+      // check if the user is exist on DB
+      const existingUser = await userModel.findOne({ "google.id": profile.id });
+      if (existingUser) {
+        console.log('user exist in the data base!!')
+        return done(null, existingUser);
+      }
+      console.log('user not  exist in the data base!!')
+
+      // if not create new user 
+      const newUser = new userModel({
+        method: 'google',
+        google: {
+          id: profile.id,
+          email: profile.emails[0].value
+        }
+      });
+      await newUser.save();
+      done(null, newUser);
+    } catch (error) {
+      done(error, false, error.message)
+    }
+  }
+))
+
+
+
+
+// Local Strategy to signin functionality 
 passport.use(new localStrategy(
   {
     usernameField: 'email'
@@ -39,13 +82,13 @@ passport.use(new localStrategy(
 
     try {
       //  check if user given email 
-      const user = await userModel.findOne({ email })
+      const user = await userModel.findOne({ "local.email": email })
       if (!user) {
         return done(null, false)
       }
       // check password is correct 
       // const isMatch = await userModel.isValidPassword(password);
-      const isMatch = await bcrypt.compare(password, user.password)
+      const isMatch = await bcrypt.compare(password, user.local.password)
       if (!isMatch) { return done(null, false) } // done like next , if here I don't write return so he will go to : done(null,user)
       if (!isMatch) {
         return done(null, false)

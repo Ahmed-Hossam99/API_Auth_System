@@ -18,7 +18,7 @@ exports.signUp = async (req, res, next) => {
       return res.status(422).json({ errors: errors.array() });
     }
     // check if user is exist
-    const user = await userModel.findOne({ email: req.body.email })
+    const user = await userModel.findOne({ "local.email": req.body.email })
     if (user) {
       return res.status(403).json({ // 403 meaning forbidden req because user exist
         message: 'email already exist !!'
@@ -26,9 +26,13 @@ exports.signUp = async (req, res, next) => {
     }
     else {
       newUser = new userModel({
-        name: req.body.name,
-        email: req.body.email,
-        password: req.body.password
+        method: 'local',
+        local: {
+          name: req.body.name,
+          email: req.body.email,
+          password: req.body.password
+        },
+
       })
       const userData = await newUser.save();
       const token = signToken(userData);
@@ -48,6 +52,14 @@ exports.signIn = async (req, res, next) => {
   // validation done from passport file 
   const token = signToken(req.user)
   res.status(200).json({ token })
+}
+
+exports.googleoAuth = async (req, res, next) => {
+  // validation done from passport file 
+  console.log(req.user)
+  const user = req.user
+  const token = signToken(req.user)
+  res.status(200).json({ token, user })
 }
 
 

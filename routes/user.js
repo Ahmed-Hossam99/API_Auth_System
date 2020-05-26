@@ -39,7 +39,9 @@ router.route('/signin').post([
     .isLength({ min: 5 })
     .trim()], passport.authenticate('local', { session: false }), userController.signIn)
 
-router.get('/secret', passport.authenticate('jwt', { session: false }), userController.secret)
+router.route('/secret').get(passport.authenticate('jwt', { session: false }), userController.secret)
+
+router.route('/oauth/google').post(passport.authenticate('googleToken', { session: false }), userController.googleoAuth);
 
 
 
