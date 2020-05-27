@@ -5,6 +5,9 @@ const { isAuth } = require('../helpers/auth')
 const passport = require('passport')
 require('../helpers/passport')
 
+// validtion middlewares
+const { signinValidationRules, signupValidationRules, validate } = require('../helpers/validation')
+
 const passportSignIn = passport.authenticate('local', { session: false });
 const passportJWT = passport.authenticate('jwt', { session: false });
 const passportGoogl = passport.authenticate('googleToken', { session: false })
@@ -17,32 +20,11 @@ const passportFacebook = passport.authenticate('facebookToken', { session: false
 const userController = require('../controllers/user')
 
 // Post route to signup
-router.route('/signup').post([
-  check('email')
-    .isEmail()
-    .withMessage('please enter valid e-mail')
-    .normalizeEmail(),
-
-  body('password', 'Password has to be valid.')
-    .isLength({ min: 5 })
-    .trim(),
-  // .isAlphanumeric()
-  body('name', ' Name must be entered . ')
-    .isLength({ min: 5 })
-    .trim()
-], userController.signUp)
+router.route('/signup').post(signupValidationRules(), validate, userController.signUp)
 
 
 // Post Route to signin function 
-router.route('/signin').post([
-  check('email')
-    .isEmail()
-    .withMessage('please enter valid e-mail')
-    .normalizeEmail(),
-
-  body('password', 'Password has to be valid.')
-    .isLength({ min: 5 })
-    .trim()], passportSignIn, userController.signIn)
+router.route('/signin').post(signinValidationRules(), validate, passportSignIn, userController.signIn)
 
 router.route('/secret').get(passportJWT, userController.secret)
 
@@ -56,6 +38,9 @@ router.route('/oauth/facebook').post(passportFacebook, userController.OAuthToken
 
 // this link to get access token from google OAuth  
 // https://developers.google.com/oauthplayground/
+
+// this link to get access token from facebook OAuth  
+// https://developers.facebook.com/tools/explorer/
 
 module.exports = router
 

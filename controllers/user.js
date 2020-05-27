@@ -12,11 +12,6 @@ signToken = user => {
 }
 exports.signUp = async (req, res, next) => {
   try {
-    // check validation result 
-    const errors = await validationResult(req)
-    if (!errors.isEmpty()) {
-      return res.status(422).json({ errors: errors.array() });
-    }
     // check if user is exist
     const user = await userModel.findOne({ "local.email": req.body.email })
     if (user) {
