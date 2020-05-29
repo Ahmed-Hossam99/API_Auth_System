@@ -22,10 +22,10 @@ const signinValidationRules = () => {
       .isEmail()
       .withMessage('please enter valid e-mail')
       .normalizeEmail(),
-
     body('password', 'Password has to be valid.')
       .isLength({ min: 5 })
       .trim(),
+
   ]
 }
 

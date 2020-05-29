@@ -1,6 +1,7 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const morgan = require('morgan')
+const path = require('path')
 const keys = require('./config/keys')
 const bodyParser = require('body-parser')
 const userRouter = require('./routes/user')
@@ -17,6 +18,12 @@ app.use(morgan('dev'))
 // bodyParser Mideddleware
 app.use(bodyParser.json({ limit: '100mb' }));
 app.use(bodyParser.urlencoded({ limit: '100mb', extended: true, parameterLimit: 50000 }));
+
+
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// make the file publically accessable 
+app.use('/uploads', express.static('uploads'));
+
 
 
 // routes

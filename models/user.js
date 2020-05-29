@@ -16,7 +16,26 @@ const userSchema = new Schema({
     },
     password: {
       type: String
-    }
+    },
+    name: {
+      type: String
+    },
+    // profile: {
+    //   type: String,
+    //   default: 'http://res.cloudinary.com/hossam99/image/upload/v1590711432/ayt1a5vvmcscteltalbr.webp'
+    // },
+    profile: {
+      profUrl: {
+        type: String,
+        default: 'http://res.cloudinary.com/hossam99/image/upload/v1590711432/ayt1a5vvmcscteltalbr.webp'
+
+      },
+      profId: {
+        type: String,
+        default: 'ayt1a5vvmcscteltalbr'
+      },
+    },
+
   },
   google: {
     id: {

@@ -119,7 +119,7 @@ passport.use(new localStrategy(
       // check password is correct 
       // const isMatch = await userModel.isValidPassword(password);
       const isMatch = await bcrypt.compare(password, user.local.password)
-      if (!isMatch) { return done(null, false) } // done like next , if here I don't write return so he will go to : done(null,user)
+
       if (!isMatch) {
         return done(null, false)
       }
